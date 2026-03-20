@@ -30,6 +30,40 @@ echo "🤖 APPLICATION_ID: $APPLICATION_ID"
 # ===== 生成 nonce =====
 NONCE=$(python3 -c "import time; print(str(int((int(time.time()*1000) - 1420070400000) << 22)))")
 
+# ===== 构造 payload =====
+PAYLOAD=$(cat <<EOF
+{
+  "type": 2,
+  "application_id": "${APPLICATION_ID}",
+  "guild_id": "${GUILD_ID}",
+  "channel_id": "${CHANNEL_ID}",
+  "session_id": "${SESSION_ID}",
+  "nonce": "${NONCE}",
+  "analytics_location": "slash_ui",
+  "data": {
+    "version": "${VERSION}",
+    "id": "${COMMAND_ID}",
+    "guild_id": "${GUILD_ID}",
+    "name": "renew",
+    "type": 1,
+    "options": [],
+    "application_command": {
+      "id": "${COMMAND_ID}",
+      "type": 1,
+      "application_id": "${APPLICATION_ID}",
+      "guild_id": "${GUILD_ID}",
+      "version": "${VERSION}",
+      "name": "renew",
+      "description": "Renouveler votre serveur gratuit",
+      "integration_types": [0],
+      "options": []
+    },
+    "attachments": []
+  }
+}
+EOF
+)
+
 # ===== 发送 slash command 交互 =====
 echo "🚀 正在发送 /renew ..."
 RESPONSE=$(curl -s -w "\n%{http_code}" $PROXY \
@@ -41,23 +75,7 @@ RESPONSE=$(curl -s -w "\n%{http_code}" $PROXY \
   -H "x-discord-timezone: Asia/Shanghai" \
   -H "origin: https://discord.com" \
   -H "referer: https://discord.com/channels/${GUILD_ID}/${CHANNEL_ID}" \
-  -d "{
-    \"type\": 2,
-    \"application_id\": \"${APPLICATION_ID}\",
-    \"guild_id\": \"${GUILD_ID}\",
-    \"channel_id\": \"${CHANNEL_ID}\",
-    \"session_id\": \"${SESSION_ID}\",
-    \"nonce\": \"${NONCE}\",
-    \"data\": {
-      \"version\": \"${VERSION}\",
-      \"id\": \"${COMMAND_ID}\",
-      \"name\": \"renew\",
-      \"type\": 1,
-      \"options\": [],
-      \"integration_type\": 0,
-      \"attachments\": []
-    }
-  }")
+  -d "${PAYLOAD}")
 
 HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 BODY=$(echo "$RESPONSE" | head -n-1)
