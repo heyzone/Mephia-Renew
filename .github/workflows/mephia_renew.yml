@@ -9,8 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: 📥 检出代码
-        uses: actions/checkout@v4
+      - name: 📥 从私库下载续期脚本
+        env:
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          curl -sL -H "Authorization: token $PRIVATE_REPO_TOKEN" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/${{ github.repository_owner }}/MephiaAuto/contents/mephia_renew.sh?ref=main" \
+            -o mephia_renew.sh
+          chmod +x mephia_renew.sh
 
       - name: 🛡️ 启动 GOST 代理转发
         if: ${{ env.GOST_PROXY != '' }}
